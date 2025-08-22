@@ -3,56 +3,104 @@ const Trip = require('../models/travlr'); // Register Model
 const Model = mongoose.model('trips');
 
 //GET: /trips - lists all trips
-// Regardless of outcome, response must include HTML status code
-// and JSON message requesting client
 const tripList = async (req, res) => {
     const q = await Model
         .find({}) // no filter, return all records
         .exec();
 
-        // Uncomment the following line to show results of query
-        // on the console
-        // console.log(q);
-
     if(!q)
     { //database returned no data
         return res
             .status(404)
-            .json(err);
+            .json({ message: "No trips found" });
     } else { // Return resulting trip list
         return res
             .status(200)
             .json(q);
     }
-
 };
 
-//GET: /trips - lists all trips
-// Regardless of outcome, response must include HTML status code
-// and JSON message requesting client
+//GET: /trips/:tripCode - finds trip by code
 const tripsFindByCode = async (req, res) => {
     const q = await Model
         .find({'code' : req.params.tripCode }) // Return single record
         .exec();
 
-        // Uncomment the following line to show results of query
-        // on the console
-        // console.log(q);
-
     if(!q)
     { //database returned no data
         return res
             .status(404)
-            .json(err);
+            .json({ message: "Trip not found" });
     } else { // Return resulting trip list
         return res
             .status(200)
             .json(q);
     }
+};
 
+//POST: /trips - Adds a new trip
+const tripsAddTrip = async (req, res) => {
+    const newTrip = new Trip({
+        code: req.body.code,
+        name: req.body.name,
+        length: req.body.length,
+        start: req.body.start,
+        resort: req.body.resort,
+        perPerson: req.body.perPerson,
+        image: req.body.image,
+        description: req.body.description
+    });
+
+    const q = await newTrip.save();
+    
+    if(!q)
+    { //database returned no data
+        return res
+            .status(404)
+            .json({ message: "Failed to save trip" });
+    } else { // Return new trip
+        return res
+            .status(201)
+            .json(q);
+    }
+};
+
+//PUT: /trips/:tripCode - Updates a trip
+const tripsUpdateTrip = async (req, res) => {
+  console.log(req.params);
+  console.log(req.body);
+
+  const q = await Model
+    .findOneAndUpdate(
+        { 'code': req.params.tripCode },
+        {
+            code: req.body.code,
+            name: req.body.name,
+            length: req.body.length,
+            start: req.body.start,
+            resort: req.body.resort,
+            perPerson: req.body.perPerson,
+            image: req.body.image,
+            description: req.body.description
+        }
+    )
+    .exec();
+
+    if (!q) 
+    { // Database returned no data
+        return res
+        .status(400)
+        .json({ message: "Trip not found to update" });
+    } else { // Return resulting updated trip
+        return res
+            .status(201)
+            .json(q);
+    }
 };
 
 module.exports = {
     tripList,
-    tripsFindByCode
+    tripsAddTrip,
+    tripsFindByCode,
+    tripsUpdateTrip
 };
